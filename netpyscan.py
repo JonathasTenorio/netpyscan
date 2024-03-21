@@ -1,6 +1,9 @@
 from scapy.all import *
 import sys
 
+hosts_encontrados = {}
+hosts_nao_encontrados= {}
+
 def configuracao_verbosa():
     conf.verb= False
 
@@ -125,27 +128,31 @@ def ajusta_argumento_dois(ports):
     return portas,eTrue
 
 
-configuracao_verbosa()
+def main(argumentos):
 
-hosts_encontrados = {}
-hosts_nao_encontrados= {}
-target = sys.argv[1]
+    configuracao_verbosa()
+    
+    target = argumentos[1]
 
-define_alvo(target)
+    define_alvo(target)
 
-if "-f" in sys.argv:
-    for host in hosts_nao_encontrados:
+    if "-f" in argumentos:
         host_em_hosts(hosts_nao_encontrados,port=80)
 
-ports,ifTrue=ajusta_argumento_dois(sys.argv[2])
+    ports,ifTrue=ajusta_argumento_dois(argumentos[2])
 
-if "-r" in sys.argv:
-    argumento_erre(hosts_encontrados,ports,ifTrue)
-else:
-    sem_argumento_erre(hosts_encontrados,ports,ifTrue)
+    if "-r" in argumentos:
+        argumento_erre(hosts_encontrados,ports,ifTrue)
+    else:
+        sem_argumento_erre(hosts_encontrados,ports,ifTrue)
 
-imprime_resultado_varredura(hosts_encontrados,array_argumentos=sys.argv)
+    imprime_resultado_varredura(hosts_encontrados,array_argumentos=argumentos)
 
+
+
+if __name__ == '__main__':
+    argumentos=sys.argv
+    main(argumentos)
 
 
 # falta passar verificação de quantidade de hosts separados por - ou , ou por /bits (feito)
