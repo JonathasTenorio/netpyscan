@@ -6,22 +6,26 @@ def configuracao_verbosa():
 
 def envia_pacote_tcp(target, port):
     response = sr1(IP(dst=target)/TCP(dport=int(port), flags="S"), timeout=1, verbose=0)
+    return response
+
+def armazena_resposta_pacote(response):
     if response and response.haslayer(TCP):
         resposta_string=str(response[TCP])
         divide_resposta=resposta_string.split(">")
         pega_flag_servico=divide_resposta[0].split(":")[-1].strip()
         pega_resposta_servico=resposta_string.split()[-1]
-        hosts_encontrados[target].setdefault('porta', {})
-        hosts_encontrados[target]['porta'][port] = {
+        hosts_encontrados[response[IP].src].setdefault('porta', {})
+        hosts_encontrados[response[IP].src]['porta'][response[TCP].sport] = {
                                         'protocolo': 'TCP', 
                                         'flag': pega_flag_servico, 
                                         'estado': ' ', 
                                         'resposta': pega_resposta_servico
                                         }
         if (response[TCP].flags == 18):
-            hosts_encontrados[target]['porta'][port]['estado'] = 'aberta'
+            hosts_encontrados[response[IP].src]['porta'][response[TCP].sport]['estado'] = 'aberta'
         else:
-            hosts_encontrados[target]['porta'][port]['estado'] = 'fechada'
+            hosts_encontrados[response[IP].src]['porta'][response[TCP].sport]['estado'] = 'fechada'
+
 
 def host_ativo(target):
     resposta_icmp=sr1(IP(dst=target)/ICMP(), timeout=2)
@@ -41,14 +45,16 @@ def host_ativo(target):
         hosts_encontrados[target] = {'status': 'Filtrado'}
         return 3
 
-
-def imprime_resultado_varredura(hosts_encontrados):
+def imprime_resultado_varredura(hosts_encontrados,array_argumentos):
     for ip, info in hosts_encontrados.items():
         print(f'[+]  {ip}  [ {info["status"]} ]')
         if (info['porta'] != ""):
             for porta, info_porta in info['porta'].items():
-                if(info_porta["estado"] == "aberta"):
+                if "-v" in array_argumentos:
                     print(f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  {info_porta["resposta"]}''')
+                else:
+                    if(info_porta["estado"] == "aberta"):
+                        print(f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  {info_porta["resposta"]}''')
 
 def split_rede(target):
     
@@ -94,19 +100,23 @@ def define_alvo(target):
 def porta_em_porta(host,ports,ifTrue):
     if ifTrue:        
         for porta in range(int(ports[0]), int(ports[-1])+1):
-            envia_pacote_tcp(host, porta)
+            resposta_pacote=envia_pacote_tcp(host, porta)
+            armazena_resposta_pacote(resposta_pacote)
     else:
         for porta in ports:
-            envia_pacote_tcp(host, porta)
+            resposta_pacote=envia_pacote_tcp(host, porta)
+            armazena_resposta_pacote(resposta_pacote)
         
 def host_em_hosts(hosts_encontrados,port):
     for host in hosts_encontrados:
-        envia_pacote_tcp(host, port)
+        resposta_pacote=envia_pacote_tcp(host, port)
+        armazena_resposta_pacote(resposta_pacote)
 
 def argumento_erre(hosts_encontrados,ports,ifTrue):
     if ifTrue:        
         for porta in range(int(ports[0]), int(ports[-1])+1):
             host_em_hosts(hosts_encontrados,porta)
+            
     else:
         for porta in ports:
             host_em_hosts(hosts_encontrados,porta)
@@ -140,14 +150,14 @@ if "-r" in sys.argv:
 else:
     sem_argumento_erre(hosts_encontrados,ports,ifTrue)
 
-imprime_resultado_varredura(hosts_encontrados)
+imprime_resultado_varredura(hosts_encontrados,array_argumentos=sys.argv)
 
 
 
 # falta passar verificação de quantidade de hosts separados por - ou , ou por /bits (feito)
 # falta verificação de formato do ip passado (cancelado)
 # falta range de portas e verificar se é range ou valores específicos  (feito)
-# falta verificação de modo verboso -v para exibir portas fechadas
+# falta verificação de modo verboso -v para exibir portas fechadas (feito)
 # falta verificação do -f para verificar se o host esta filtrando o protocolo icmp em caso de não haver resposta 
 # falta verificar quantos métodos argumentos foram passados para que todos sejam chamados da devida forma 
 # falta criar uma main function para que esta organize e ordene os códigos
