@@ -263,7 +263,7 @@ def define_alvo(target):
     rede=split_rede(endereco_ajustado)
 
     #verifica se existe o hífen na variável
-    if "-" in endereco_ajustado:
+    if "-" in endereco_ajustado[-1]:
 
         #faz split da ultima posição do endereço
         array_endereco=endereco_ajustado[-1].split("-")
