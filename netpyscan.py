@@ -3,6 +3,7 @@
 from scapy.all import *          #importa o scapy
 import sys                         # importa sys
 from datetime import datetime    # importa datetime
+import os                       # importa os 
 
 #inicializa dois dicionários vazios
 hosts_encontrados = {} 
@@ -124,11 +125,15 @@ def host_ativo(target):
         hosts_nao_encontrados[target] = {'status': 'Inativo'}
 
 # função responsável por criar arquivo de log
-def cria_log():
+def cria_log(caminho):
 
     # cria variável que armazena o valor da data/hora atual
     today=datetime.now()
 
+    # verifica se o parâmetro caminho não é nulo, se não for, vai até o caminho
+    if caminho != "":
+        os.chdir(caminho)
+    
     # cria variável que vai receber os valores para gerar o nome de arquivo
     log_name=f"{today.year}_{today.month}_{today.day}_{today.hour}_{today.minute}_{today.second}.log"
     
@@ -137,9 +142,6 @@ def cria_log():
 
         # abre/cria o arquivo com o nome armazenado em log_name
         arquivo = open(log_name, "w")
-
-        # escreve a data/hora na entrada do arquivo
-        arquivo.write(today + '\n')
         return arquivo
     
     # captura o erro
@@ -158,9 +160,9 @@ def imprime_resultado_varredura(hosts_encontrados,array_argumentos):
 
     # verifica se o -o foi passado 
     if "-o" in array_argumentos:
-
+        
         # chama função para criar o arquivo
-        arquivo = cria_log()
+        arquivo = cria_log(caminho="".join(array_argumentos).split("-o")[-1])
 
      # percorre o dicionário   
     for ip, info in hosts_encontrados.items():
@@ -403,7 +405,6 @@ def main(argumentos):
 
 # inicia o script chamando a função main e passando os argumentos
 if __name__ == '__main__':
-    
     print('''============NeTPyscan============''')
     argumentos=sys.argv
     main(argumentos)
