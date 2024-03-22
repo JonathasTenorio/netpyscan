@@ -1,6 +1,6 @@
 from scapy.all import *
 import sys
-
+from datetime import datetime
 hosts_encontrados = {}
 hosts_nao_encontrados= {}
 
@@ -75,17 +75,43 @@ def host_ativo(target):
     else:
         hosts_nao_encontrados[target] = {'status': 'Inativo'}
 
+def cria_log(hosts_encontrados):
+    today=datetime.now()
+    log_name=f"{today.year}_{today.month}_{today.day}_{today.hour}_{today.minute}_{today.second}.log"
+    try:
+        arquivo = open(log_name, "w")
+        return arquivo
+    except Exception as e:
+        print(f"Erro ao criar o arquivo de log: {e}")
+        return None
+
 def imprime_resultado_varredura(hosts_encontrados,array_argumentos):
+    msg = ""
+    arquivo = None
+    if "-o" in array_argumentos:
+        arquivo = cria_log(hosts_encontrados)
     for ip, info in hosts_encontrados.items():
         if info["status"] != "Inativo":
-            print(f'[+]  {ip}  [ {info["status"]} ]')
+            header = f'[+]  {ip}  [ {info["status"]} ]'
+            if header != "":
+                if arquivo is not None:
+                    arquivo.write(header + '\n')
+                print(f"{header}")
             if (info['porta'] != ""):
                 for porta, info_porta in info['porta'].items():
                     if "-v" in array_argumentos:
-                        print(f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  ''')
+                        msg = f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  '''
                     else:
                         if(info_porta["estado"] != "fechada"):
-                            print(f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  ''')
+                            msg = f'''[-]  {porta}/{info_porta["protocolo"]}  ({info_porta["flag"]})  [ {info_porta["estado"]} ]  '''
+                    if msg != "":
+                        if arquivo is not None:
+                            arquivo.write(msg + '\n')
+                        print(msg)
+                    msg = ""
+            header = ""
+    if arquivo is not None:
+        arquivo.close()
 
 def split_rede(target):
     aux=target.split(".")
