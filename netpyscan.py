@@ -93,17 +93,7 @@ def analisa_resposta_pacote_tcp(response):
     else:
 
         # retorna código 0 para uma revisão de resposta
-        return 0
-
-# para o caso em que a porta não responde (possívelmente filtrada por firewall ou iptables drop )
-def analiza_code(code,host,porta):
-    if code == 0:
-        hosts_encontrados[host].setdefault('porta', {})
-        hosts_encontrados[host]['porta'][porta] = {
-                                    'protocolo': 'TCP', 
-                                    'flag': '?', # não é possível fazer banner grabbing dinâmicamente
-                                    'estado': 'filtrada', 
-                                    }
+        return None
 
 # função responsável por definir se o host está ativo na rede 
 def host_ativo(target):
@@ -303,11 +293,8 @@ def porta_em_porta(host,ports,ifTrue):
             # armazena resposta do pacote
             resposta_pacote=envia_pacote_tcp(host, porta)
 
-            # analiza resposta e retorna um código
-            code=analisa_resposta_pacote_tcp(resposta_pacote)
-            
-            # analiza o código da resposta
-            analiza_code(code,host,porta)
+            # analiza resposta
+            analisa_resposta_pacote_tcp(resposta_pacote)
     else:
 
         # entra no laço e executa para todas portas na lista
@@ -316,11 +303,8 @@ def porta_em_porta(host,ports,ifTrue):
             # armazena resposta do pacote
             resposta_pacote=envia_pacote_tcp(host, porta)
 
-            # analiza resposta e retorna um código
-            code=analisa_resposta_pacote_tcp(resposta_pacote)
-
-            # analiza o código da resposta
-            analiza_code(code,host,porta)
+            # analiza resposta
+            analisa_resposta_pacote_tcp(resposta_pacote)
 
 # percorre o dicionário de hosts que foram encontrados
 def host_em_hosts(hosts_encontrados,port):
@@ -331,11 +315,8 @@ def host_em_hosts(hosts_encontrados,port):
         # armazena resposta do pacote
         resposta_pacote=envia_pacote_tcp(host, port)
         
-        # analiza resposta e retorna um código
-        code=analisa_resposta_pacote_tcp(resposta_pacote)
-
-        # analiza o código da resposta
-        analiza_code(code,host,port)
+        # analiza resposta
+        analisa_resposta_pacote_tcp(resposta_pacote)
 
 # caso argumento -r 
 def argumento_erre(hosts_encontrados,ports,ifTrue):
